@@ -7,7 +7,10 @@ import sys
 import tempfile
 import threading
 import unittest
+import logging
 from unittest.mock import MagicMock, AsyncMock
+
+logging.disable(logging.CRITICAL)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
