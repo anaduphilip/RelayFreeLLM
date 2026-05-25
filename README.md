@@ -81,33 +81,33 @@ python -m tests.test_models_availability
 <summary>Click to see expected output (21/21 models available)</summary>
 
 ```
-==================================================
+======================================================================
 MODEL AVAILABILITY SUMMARY
-==================================================
-✅ PASS | Cerebras     | qwen-3-235b-a22b-instruct-2507           | Success
-✅ PASS | Groq         | llama-3.3-70b-versatile                  | Success
-✅ PASS | Groq         | qwen/qwen3-32b                           | Success
-✅ PASS | Groq         | openai/gpt-oss-20b                       | Success
-✅ PASS | Groq         | openai/gpt-oss-120b                      | Success
-✅ PASS | Groq         | openai/gpt-oss-safeguard-20b             | Success
-✅ PASS | Groq         | groq/compound                            | Success
-✅ PASS | Mistral      | mistral-large-latest                     | Success
-✅ PASS | Mistral      | mistral-medium-latest                    | Success
-✅ PASS | Mistral      | codestral-latest                         | Success
-✅ PASS | Mistral      | mistral-large-2512                       | Success
-✅ PASS | Mistral      | mistral-medium-2508                      | Success
-✅ PASS | Mistral      | mistral-medium-2505                      | Success
-✅ PASS | Mistral      | mistral-medium                           | Success
-✅ PASS | Mistral      | codestral-2508                           | Success
-✅ PASS | Gemini       | gemini-2.5-flash                         | Success
-✅ PASS | Nvidia       | moonshotai/kimi-k2-instruct              | Success
-✅ PASS | Nvidia       | z-ai/glm4.7                              | Success
-✅ PASS | Nvidia       | stepfun-ai/step-3.5-flash                | Success
-✅ PASS | Nvidia       | google/gemma-3-27b-it                    | Success
-✅ PASS | Nvidia       | qwen/qwen3-coder-480b-a35b-instruct      | Success
-==================================================
+======================================================================
+✅ PASS | Cerebras        | zai-glm-4.7                                   | Success
+✅ PASS | Groq            | llama-3.3-70b-versatile                       | Success
+✅ PASS | Groq            | qwen/qwen3-32b                                | Success
+✅ PASS | Groq            | openai/gpt-oss-20b                            | Success
+✅ PASS | Groq            | openai/gpt-oss-120b                           | Success
+✅ PASS | Groq            | openai/gpt-oss-safeguard-20b                  | Success
+✅ PASS | Groq            | groq/compound                                 | Success
+✅ PASS | Mistral         | mistral-large-latest                          | Success
+✅ PASS | Mistral         | mistral-medium-latest                         | Success
+✅ PASS | Mistral         | codestral-latest                              | Success
+✅ PASS | Mistral         | mistral-large-2512                            | Success
+✅ PASS | Mistral         | mistral-medium-2508                           | Success
+✅ PASS | Mistral         | mistral-medium-2505                           | Success
+✅ PASS | Mistral         | mistral-medium                                | Success
+✅ PASS | Mistral         | codestral-2508                                | Success
+✅ PASS | Gemini          | gemini-2.5-flash                              | Success
+✅ PASS | Nvidia          | abacusai/dracarys-llama-3.1-70b-instruct      | Success
+✅ PASS | Nvidia          | openai/gpt-oss-120b                           | Success
+✅ PASS | Nvidia          | stepfun-ai/step-3.5-flash                     | Success
+✅ PASS | Nvidia          | mistralai/mistral-large-3-675b-instruct-2512  | Success
+✅ PASS | Nvidia          | mistralai/mistral-nemotron                    | Success
+======================================================================
 TOTAL: 21/21 models available.
-==================================================
+======================================================================
 ```
 
 </details>
