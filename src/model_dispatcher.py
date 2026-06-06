@@ -384,11 +384,14 @@ class ModelDispatcher:
                 target_context_tokens=target_context_tokens
             )
 
-            # Convert to message format for API, filtering out empty messages
+            # Convert to message format for API, filtering out empty messages.
+            # Use get_text() to flatten structured content (e.g. content-part
+            # lists with image_url) down to plain text, matching the provider
+            # API expectations.
             context_messages = [
-                {"role": msg.role, "content": msg.content}
+                {"role": msg.role, "content": msg.get_text()}
                 for msg in selected_history
-                if msg.content and msg.content.strip()
+                if msg.get_text().strip()
             ]
 
             self.logger.debug(
