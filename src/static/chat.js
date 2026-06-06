@@ -620,9 +620,22 @@ function renderMarkdown(text) {
   let result = '';
   let inP = false;
   let inL = false;
+  let inPre = false;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const rawLine = lines[i];
+    const line = rawLine.trim();
+
+    if (inPre) {
+      result += rawLine;
+      if (line.includes('</pre>')) {
+        inPre = false;
+      } else {
+        result += '\n';
+      }
+      continue;
+    }
+
     if (!line) {
       if (inP) { result += '</p>'; inP = false; }
       if (inL) { result += '</ul>'; inL = false; }
@@ -632,6 +645,7 @@ function renderMarkdown(text) {
       if (inP) { result += '</p>'; inP = false; }
       if (inL) { result += '</ul>'; inL = false; }
       result += line;
+      if (line.startsWith('<pre')) inPre = true;
       continue;
     }
     if (line.startsWith('<li>')) {
