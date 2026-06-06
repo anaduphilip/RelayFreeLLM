@@ -358,7 +358,12 @@ async function saveCurrentConversation() {
   if (!state.currentId) return;
   if (state.messages.length === 0) return;
   try {
-    const msgs = state.messages.map(m => ({ role: m.role, content: m.content }));
+    const msgs = state.messages.map(m => ({
+      role: m.role,
+      content: m.content,
+      ...(m.provider && { provider: m.provider }),
+      ...(m.actualModel && { actualModel: m.actualModel }),
+    }));
     const title = deriveTitle(state.messages);
     await getStore().update(state.currentId, {
       messages: msgs,
@@ -620,9 +625,22 @@ function renderMarkdown(text) {
   let result = '';
   let inP = false;
   let inL = false;
+  let inPre = false;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const rawLine = lines[i];
+    const line = rawLine.trim();
+
+    if (inPre) {
+      result += rawLine;
+      if (line.includes('</pre>')) {
+        inPre = false;
+      } else {
+        result += '\n';
+      }
+      continue;
+    }
+
     if (!line) {
       if (inP) { result += '</p>'; inP = false; }
       if (inL) { result += '</ul>'; inL = false; }
@@ -632,6 +650,7 @@ function renderMarkdown(text) {
       if (inP) { result += '</p>'; inP = false; }
       if (inL) { result += '</ul>'; inL = false; }
       result += line;
+      if (line.startsWith('<pre')) inPre = true;
       continue;
     }
     if (line.startsWith('<li>')) {

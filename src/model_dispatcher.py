@@ -96,21 +96,29 @@ class ModelDispatcher:
             try:
                 raw_provider, model_name = request.model.split("/", 1)
 
-                # Resolve the actual provider that hosts this model
-                resolved_provider = None
-                for prov_name, provider in self.selector.providers.items():
-                    for model in provider.models:
-                        if model.model_name == model_name:
-                            resolved_provider = prov_name
-                            break
-                    if resolved_provider:
-                        break
-                provider_name = resolved_provider or raw_provider
-                if resolved_provider and resolved_provider != raw_provider:
-                    self.logger.info(
-                        f"Corrected provider for '{model_name}': "
-                        f"'{raw_provider}' → '{resolved_provider}'"
+                # Prefer user-specified provider; fall back to another if needed
+                provider_name = raw_provider
+                if raw_provider in self.selector.providers:
+                    has_model = any(
+                        m.model_name == model_name
+                        for m in self.selector.providers[raw_provider].models
                     )
+                    if has_model:
+                        provider_name = raw_provider
+                    else:
+                        for prov_name, provider in self.selector.providers.items():
+                            if prov_name == raw_provider:
+                                continue
+                            for model in provider.models:
+                                if model.model_name == model_name:
+                                    provider_name = prov_name
+                                    self.logger.info(
+                                        f"Corrected provider for '{model_name}': "
+                                        f"'{raw_provider}' → '{prov_name}'"
+                                    )
+                                    break
+                            if provider_name != raw_provider:
+                                break
 
                 self.logger.info(
                     f"Specific routing requested: {provider_name} ({model_name})"
@@ -150,7 +158,7 @@ class ModelDispatcher:
                     attempt=1,
                 )
             except Exception as e:
-                self.logger.error(f"Specific routing to {request.model} failed: {e}")
+                self.logger.error(f"Specific routing to {request.model} failed: {e}\n{traceback.format_exc()}")
                 return build_error_response(
                     error_message=f"Specific routing to {request.model} failed: {str(e)}",
                     attempt=1,
@@ -174,19 +182,21 @@ class ModelDispatcher:
                 for sid in expired:
                     del self.session_affinity_map[sid]
 
-            # Safety net: limit map size to prevent unbounded growth
-            max_sessions = settings.SESSION_MAX_SESSIONS
-            if len(self.session_affinity_map) > max_sessions:
-                sorted_sessions = sorted(self.session_affinity_map.items(), key=lambda x: x[1]["last_active"])
-                sessions_to_remove = sorted_sessions[:len(self.session_affinity_map) - max_sessions + 100]
-                for sid, _ in sessions_to_remove:
-                    del self.session_affinity_map[sid]
-                self.logger.info(f"Pruned {len(sessions_to_remove)} sessions due to size limit")
+                # Safety net: limit map size to prevent unbounded growth
+                max_sessions = settings.SESSION_MAX_SESSIONS
+                if len(self.session_affinity_map) > max_sessions:
+                    sorted_sessions = sorted(self.session_affinity_map.items(), key=lambda x: x[1]["last_active"])
+                    sessions_to_remove = sorted_sessions[:len(self.session_affinity_map) - max_sessions + 100]
+                    for sid, _ in sessions_to_remove:
+                        del self.session_affinity_map[sid]
+                    self.logger.info(f"Pruned {len(sessions_to_remove)} sessions due to size limit")
 
+                # READ affinity (unconditionally, after pruning)
                 if session_id in self.session_affinity_map:
                     data = self.session_affinity_map[session_id]
                     preferred_provider = data["provider"]
                     affinity_model_name = data["model"]
+                    self.session_affinity_map[session_id]["last_active"] = now
 
         while attempt < max_retries:
             try:
