@@ -9,3 +9,5 @@ python-dotenv
 pydantic
 httpx
 iniconfig
+pytest
+

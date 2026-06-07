@@ -198,7 +198,10 @@ class TestDispatcherUsageTracking(_DispatcherTestBase):
         self.mock_registry.get_client.side_effect = (
             lambda name: mock_nvidia if name == "Nvidia" else self._get_client_side_effect(name)
         )
-        self.mock_selector.providers = {"Nvidia": MagicMock()}
+        self.mock_selector.providers = {
+            "Groq": MagicMock(models=[]),
+            "Nvidia": MagicMock(),
+        }
         self.mock_selector.providers["Nvidia"].models = [
             MagicMock(model_name="moonshotai/kimi-k2-instruct")
         ]
@@ -208,7 +211,7 @@ class TestDispatcherUsageTracking(_DispatcherTestBase):
         )
         request = ChatCompletionRequest(
             messages=[ChatMessage(role="user", content="Hello")],
-            model="groq/moonshotai/kimi-k2-instruct",
+            model="Groq/moonshotai/kimi-k2-instruct",
         )
         await dispatcher.chat(request)
 
