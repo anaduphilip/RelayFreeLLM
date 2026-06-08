@@ -28,7 +28,7 @@ starlette.routing.Router.__init__ = _compat_router_init
 # ---------------------------------------------------------------------------
 
 logging.disable(logging.CRITICAL)
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 import pytest
 from fastapi import FastAPI
