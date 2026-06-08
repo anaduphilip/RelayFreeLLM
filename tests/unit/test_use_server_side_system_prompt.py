@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 logging.disable(logging.CRITICAL)
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from src.config import settings
 from src.models import ChatMessage

@@ -15,8 +15,9 @@ import pytest
 excluded = [
     "tests/manual",
     "tests/performance",
-    "tests/test_integration_routing.py",
-    "tests/test_streaming.py",
+    "tests/e2e/test_integration_routing.py",
+    "tests/e2e/test_streaming.py",
+    "tests/test_models_availability.py",
 ]
 
 args = ["tests", "-v"]

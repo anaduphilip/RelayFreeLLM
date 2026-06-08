@@ -6,7 +6,7 @@ import sys
 from unittest.mock import MagicMock
 
 # Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from src.config import settings
 from src.model_dispatcher import ModelDispatcher

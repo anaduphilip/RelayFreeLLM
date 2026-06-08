@@ -5,7 +5,7 @@ import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 
 # Ensure src is in path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from fastapi.testclient import TestClient
 from src.server import app

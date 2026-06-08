@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, AsyncMock
 
 logging.disable(logging.CRITICAL)
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from src.model_dispatcher import ModelDispatcher
 from src.model_selector import ModelSelector
