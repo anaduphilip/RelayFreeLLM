@@ -72,6 +72,7 @@ class ModelSelector:
                         model_type=m.get("type", metadata["type"]),
                         model_scale=m.get("scale", metadata["scale"]),
                         max_context_length=m.get("Max_Context_Length", 4096),
+                        modality=m.get("modality", "text"),
                     )
                 )
             providers[provider_name] = ApiProvider(provider_name, models)
@@ -100,6 +101,7 @@ class ModelSelector:
         model_type: str | None = None,
         model_scale: str | None = None,
         model_name: str | None = None,
+        modality: str | None = None,
     ) -> tuple[str, str, float]:
         """
         Select a provider's model for the given user input and system prompt.
@@ -111,6 +113,7 @@ class ModelSelector:
             exclude_providers: Providers to exclude from selection
             model_type: Filter by model type (text, coding, image, speech, etc.)
             model_scale: Filter by model scale (large, medium, small)
+            modality: Filter by modality (vision, text)
 
         Returns:
             Tuple of (provider, model_name, wait_time)
@@ -164,6 +167,7 @@ class ModelSelector:
                 model_type=model_type,
                 model_scale=model_scale,
                 model_name=model_name,
+                modality=modality,
             )
 
             if model:
@@ -207,7 +211,10 @@ class ModelSelector:
         return stats
 
     def get_available_models(
-        self, model_type: str | None = None, model_scale: str | None = None
+        self,
+        model_type: str | None = None,
+        model_scale: str | None = None,
+        modality: str | None = None,
     ) -> dict:
         available_models = []
         aggregate_limits = {
@@ -227,6 +234,8 @@ class ModelSelector:
                     continue
                 if model_scale and model.model_scale != model_scale:
                     continue
+                if modality and model.modality != modality:
+                    continue
                 provider_data["models"].append(
                     {
                         "name": model.model_name,
@@ -234,6 +243,7 @@ class ModelSelector:
                         "scale": model.model_scale,
                         "limits": model.limits,
                         "Max_Context_Length": model.max_context_length,
+                        "modality": model.modality,
                     }
                 )
                 for limit_key in aggregate_limits:
@@ -357,6 +367,7 @@ class ModelSelector:
                         model_type=metadata["type"],
                         model_scale=metadata["scale"],
                         max_context_length=4096,
+                        modality="text",
                     )
                     provider.models.append(new_tracker)
 
@@ -376,6 +387,7 @@ class ModelSelector:
                         "scale": model.model_scale,
                         "limits": model.limits,
                         "Max_Context_Length": model.max_context_length,
+                        "modality": model.modality,
                     }
                 )
             data["providers"].append(prov_data)
