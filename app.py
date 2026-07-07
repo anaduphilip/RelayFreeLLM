@@ -33,7 +33,7 @@ if GEMINI_API_KEY:
 if GROQ_API_KEY:
     providers.append({
         'name': 'groq',
-        'model': 'llama-3.3-70b-versatile',   # ← CHANGED from mixtral-8x7b-32768
+        'model': 'llama-3.3-70b-versatile',   # ← Updated to supported model
         'url': 'https://api.groq.com/openai/v1/chat/completions',
         'headers': {'Authorization': f'Bearer {GROQ_API_KEY}'},
         'format': 'openai'
@@ -81,6 +81,7 @@ def normalize_response(provider, raw_response):
             'choices': [{'message': {'content': text}, 'index': 0, 'finish_reason': 'stop'}]
         }
     else:
+        # OpenAI-compatible providers (Groq, Mistral, DeepSeek, NVIDIA)
         return raw_response
 
 @app.route('/v1/chat/completions', methods=['POST'])
@@ -96,6 +97,7 @@ def chat_completions():
             if provider.get('headers'):
                 headers.update(provider['headers'])
 
+            # Build payload
             if provider['format'] == 'gemini':
                 user_content = None
                 for msg in messages:
@@ -119,27 +121,45 @@ def chat_completions():
                     'temperature': temperature
                 }
 
+            # Increased timeout to 60 seconds
             response = requests.post(
                 provider['url'],
                 json=payload,
                 headers=headers,
-                timeout=30
+                timeout=60
             )
 
             if response.status_code == 200:
                 raw = response.json()
+                
+                # ===== CRITICAL: Check for errors in the response body =====
+                # Many providers return 200 with an 'error' field (e.g., Gemini quota, Groq model error)
+                if 'error' in raw:
+                    error_msg = raw['error'].get('message', str(raw['error']))
+                    print(f"Provider {provider['name']} returned error in body: {error_msg}")
+                    continue  # Skip this provider and try the next one
+                
                 normalized = normalize_response(provider, raw)
                 if 'choices' in normalized and len(normalized['choices']) > 0:
-                    return jsonify(normalized)
+                    # Check if the choice content is empty
+                    if normalized['choices'][0]['message'].get('content'):
+                        return jsonify(normalized)
+                    else:
+                        print(f"Provider {provider['name']} returned empty content")
+                        continue
                 else:
                     print(f"Provider {provider['name']} returned invalid response: {raw}")
                     continue
             else:
-                print(f"Provider {provider['name']} failed: {response.status_code} – {response.text[:100]}")
+                print(f"Provider {provider['name']} failed: {response.status_code} – {response.text[:200]}")
+        except requests.exceptions.Timeout:
+            print(f"Provider {provider['name']} timed out")
+            continue
         except Exception as e:
             print(f"Provider {provider['name']} error: {str(e)}")
             continue
 
+    # All providers failed – return a proper 503 error
     return jsonify({
         'error': 'All AI providers are currently unavailable. Please try again later.'
     }), 503
