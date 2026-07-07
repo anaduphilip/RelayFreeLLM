@@ -21,25 +21,7 @@ NVIDIA_API_KEY = os.getenv('NVIDIA_API_KEY')
 # ===== Provider configurations =====
 providers = []
 
-# Gemini
-if GEMINI_API_KEY:
-    providers.append({
-        'name': 'gemini',
-        'url': f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}',
-        'format': 'gemini'
-    })
-
-# Groq – UPDATED MODEL
-if GROQ_API_KEY:
-    providers.append({
-        'name': 'groq',
-        'model': 'llama-3.3-70b-versatile',   # ← Updated to supported model
-        'url': 'https://api.groq.com/openai/v1/chat/completions',
-        'headers': {'Authorization': f'Bearer {GROQ_API_KEY}'},
-        'format': 'openai'
-    })
-
-# Mistral
+# Mistral first (most reliable)
 if MISTRAL_API_KEY:
     providers.append({
         'name': 'mistral',
@@ -69,19 +51,33 @@ if NVIDIA_API_KEY:
         'format': 'openai'
     })
 
+# Groq
+if GROQ_API_KEY:
+    providers.append({
+        'name': 'groq',
+        'model': 'llama-3.3-70b-versatile',
+        'url': 'https://api.groq.com/openai/v1/chat/completions',
+        'headers': {'Authorization': f'Bearer {GROQ_API_KEY}'},
+        'format': 'openai'
+    })
+
+# Gemini last (due to quota issues)
+if GEMINI_API_KEY:
+    providers.append({
+        'name': 'gemini',
+        'url': f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}',
+        'format': 'gemini'
+    })
+
 def normalize_response(provider, raw_response):
-    """Convert any provider's response to OpenAI-compatible format."""
     if provider['format'] == 'gemini':
         candidates = raw_response.get('candidates', [])
         if candidates:
             text = candidates[0].get('content', {}).get('parts', [{}])[0].get('text', '')
         else:
             text = ''
-        return {
-            'choices': [{'message': {'content': text}, 'index': 0, 'finish_reason': 'stop'}]
-        }
+        return {'choices': [{'message': {'content': text}, 'index': 0, 'finish_reason': 'stop'}]}
     else:
-        # OpenAI-compatible providers (Groq, Mistral, DeepSeek, NVIDIA)
         return raw_response
 
 @app.route('/v1/chat/completions', methods=['POST'])
@@ -93,11 +89,11 @@ def chat_completions():
 
     for provider in providers:
         try:
+            print(f"🔄 Attempting provider: {provider['name']}")  # LOGGING
             headers = {'Content-Type': 'application/json'}
             if provider.get('headers'):
                 headers.update(provider['headers'])
 
-            # Build payload
             if provider['format'] == 'gemini':
                 user_content = None
                 for msg in messages:
@@ -121,7 +117,6 @@ def chat_completions():
                     'temperature': temperature
                 }
 
-            # Increased timeout to 60 seconds
             response = requests.post(
                 provider['url'],
                 json=payload,
@@ -131,24 +126,22 @@ def chat_completions():
 
             if response.status_code == 200:
                 raw = response.json()
-                
-                # ===== CRITICAL: Check for errors in the response body =====
-                # Many providers return 200 with an 'error' field (e.g., Gemini quota, Groq model error)
+                # Check for error in response body
                 if 'error' in raw:
                     error_msg = raw['error'].get('message', str(raw['error']))
                     print(f"Provider {provider['name']} returned error in body: {error_msg}")
-                    continue  # Skip this provider and try the next one
-                
+                    continue
                 normalized = normalize_response(provider, raw)
                 if 'choices' in normalized and len(normalized['choices']) > 0:
-                    # Check if the choice content is empty
-                    if normalized['choices'][0]['message'].get('content'):
+                    content = normalized['choices'][0]['message'].get('content')
+                    if content:
+                        print(f"✅ Provider {provider['name']} succeeded")
                         return jsonify(normalized)
                     else:
                         print(f"Provider {provider['name']} returned empty content")
                         continue
                 else:
-                    print(f"Provider {provider['name']} returned invalid response: {raw}")
+                    print(f"Provider {provider['name']} invalid response: {raw}")
                     continue
             else:
                 print(f"Provider {provider['name']} failed: {response.status_code} – {response.text[:200]}")
@@ -159,7 +152,6 @@ def chat_completions():
             print(f"Provider {provider['name']} error: {str(e)}")
             continue
 
-    # All providers failed – return a proper 503 error
     return jsonify({
         'error': 'All AI providers are currently unavailable. Please try again later.'
     }), 503
