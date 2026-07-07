@@ -1,13 +1,5 @@
-fastapi
-uvicorn
-google-genai
-cerebras_cloud_sdk
-groq
-mistralai
-requests
+flask
+flask-cors
 python-dotenv
-pydantic
-httpx
-iniconfig
-pytest
-
+requests
+gunicorn
