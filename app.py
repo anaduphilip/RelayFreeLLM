@@ -33,7 +33,7 @@ if GEMINI_API_KEY:
 if GROQ_API_KEY:
     providers.append({
         'name': 'groq',
-        'model': 'llama3-70b-8192',   # ← CHANGED from mixtral-8x7b-32768
+        'model': 'llama-3.3-70b-versatile',   # ← CHANGED from mixtral-8x7b-32768
         'url': 'https://api.groq.com/openai/v1/chat/completions',
         'headers': {'Authorization': f'Bearer {GROQ_API_KEY}'},
         'format': 'openai'
