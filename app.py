@@ -21,7 +21,7 @@ NVIDIA_API_KEY = os.getenv('NVIDIA_API_KEY')
 # ===== Provider configurations =====
 providers = []
 
-# Mistral first (most reliable)
+# 1. Mistral (primary – confirmed working)
 if MISTRAL_API_KEY:
     providers.append({
         'name': 'mistral',
@@ -31,27 +31,17 @@ if MISTRAL_API_KEY:
         'format': 'openai'
     })
 
-# DeepSeek
-if DEEPSEEK_API_KEY:
-    providers.append({
-        'name': 'deepseek',
-        'url': 'https://api.deepseek.com/v1/chat/completions',
-        'headers': {'Authorization': f'Bearer {DEEPSEEK_API_KEY}'},
-        'model': 'deepseek-chat',
-        'format': 'openai'
-    })
-
-# NVIDIA
+# 2. NVIDIA (secondary – confirmed working)
 if NVIDIA_API_KEY:
     providers.append({
         'name': 'nvidia',
         'url': 'https://integrate.api.nvidia.com/v1/chat/completions',
         'headers': {'Authorization': f'Bearer {NVIDIA_API_KEY}'},
-        'model': 'meta/llama3-70b-instruct',
+        'model': 'meta/llama-3.1-70b-instruct',
         'format': 'openai'
     })
 
-# Groq
+# 3. Groq (third – confirmed working)
 if GROQ_API_KEY:
     providers.append({
         'name': 'groq',
@@ -61,12 +51,22 @@ if GROQ_API_KEY:
         'format': 'openai'
     })
 
-# Gemini last (due to quota issues)
+# 4. Gemini (quota issues – may work later)
 if GEMINI_API_KEY:
     providers.append({
         'name': 'gemini',
         'url': f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}',
         'format': 'gemini'
+    })
+
+# 5. DeepSeek (insufficient balance – last resort)
+if DEEPSEEK_API_KEY:
+    providers.append({
+        'name': 'deepseek',
+        'url': 'https://api.deepseek.com/v1/chat/completions',
+        'headers': {'Authorization': f'Bearer {DEEPSEEK_API_KEY}'},
+        'model': 'deepseek-chat',
+        'format': 'openai'
     })
 
 def normalize_response(provider, raw_response):
@@ -89,7 +89,7 @@ def chat_completions():
 
     for provider in providers:
         try:
-            print(f"🔄 Attempting provider: {provider['name']}")  # LOGGING
+            print(f"🔄 Attempting provider: {provider['name']}")
             headers = {'Content-Type': 'application/json'}
             if provider.get('headers'):
                 headers.update(provider['headers'])
@@ -126,7 +126,6 @@ def chat_completions():
 
             if response.status_code == 200:
                 raw = response.json()
-                # Check for error in response body
                 if 'error' in raw:
                     error_msg = raw['error'].get('message', str(raw['error']))
                     print(f"Provider {provider['name']} returned error in body: {error_msg}")
