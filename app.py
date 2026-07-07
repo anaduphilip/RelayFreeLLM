@@ -33,9 +33,9 @@ if GEMINI_API_KEY:
 if GROQ_API_KEY:
     providers.append({
         'name': 'groq',
+        'model': 'mixtral-8x7b-32768',   # or 'llama3-8b-8192'
         'url': 'https://api.groq.com/openai/v1/chat/completions',
         'headers': {'Authorization': f'Bearer {GROQ_API_KEY}'},
-        'model': 'llama3-70b-8192',  # <- UPDATED: correct model name
         'format': 'openai'
     })
 
