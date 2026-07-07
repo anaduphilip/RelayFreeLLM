@@ -21,7 +21,7 @@ NVIDIA_API_KEY = os.getenv('NVIDIA_API_KEY')
 # ===== Provider configurations =====
 providers = []
 
-# Gemini (uses different API format)
+# Gemini
 if GEMINI_API_KEY:
     providers.append({
         'name': 'gemini',
@@ -29,11 +29,11 @@ if GEMINI_API_KEY:
         'format': 'gemini'
     })
 
-# Groq
+# Groq – UPDATED MODEL
 if GROQ_API_KEY:
     providers.append({
         'name': 'groq',
-        'model': 'mixtral-8x7b-32768',   # or 'llama3-8b-8192'
+        'model': 'llama3-70b-8192',   # ← CHANGED from mixtral-8x7b-32768
         'url': 'https://api.groq.com/openai/v1/chat/completions',
         'headers': {'Authorization': f'Bearer {GROQ_API_KEY}'},
         'format': 'openai'
@@ -81,8 +81,7 @@ def normalize_response(provider, raw_response):
             'choices': [{'message': {'content': text}, 'index': 0, 'finish_reason': 'stop'}]
         }
     else:
-        # OpenAI-compatible providers (Groq, Mistral, DeepSeek, NVIDIA)
-        return raw_response  # Already in OpenAI format
+        return raw_response
 
 @app.route('/v1/chat/completions', methods=['POST'])
 def chat_completions():
@@ -97,9 +96,7 @@ def chat_completions():
             if provider.get('headers'):
                 headers.update(provider['headers'])
 
-            # Build payload
             if provider['format'] == 'gemini':
-                # Gemini requires a different payload structure
                 user_content = None
                 for msg in messages:
                     if msg['role'] == 'user':
@@ -132,7 +129,6 @@ def chat_completions():
             if response.status_code == 200:
                 raw = response.json()
                 normalized = normalize_response(provider, raw)
-                # Ensure it always has the required fields
                 if 'choices' in normalized and len(normalized['choices']) > 0:
                     return jsonify(normalized)
                 else:
@@ -144,7 +140,6 @@ def chat_completions():
             print(f"Provider {provider['name']} error: {str(e)}")
             continue
 
-    # If all providers fail, return a user-friendly error
     return jsonify({
         'error': 'All AI providers are currently unavailable. Please try again later.'
     }), 503
